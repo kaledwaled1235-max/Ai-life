@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Calorie & Macro Tracker (MVP) — Monochrome</title>
+<style>
+:root{
+  --bg:#ffffff; --card:#ffffff; --ink:#000000; --sub:#444444;
+  --brand:#000000; --ok:#000000; --warn:#000000; --danger:#000000;
+  --muted:#d0d0d0;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background:#fff; color:var(--ink);
+}
+.container{max-width:980px;margin:0 auto;padding:16px}
+.card{
+  background:var(--card); border:1px solid var(--muted);
+  box-shadow:none; border-radius:18px; padding:16px; margin:12px 0;
+}
+h1,h2,h3{margin:8px 0}
+h1{font-size:clamp(22px,3.8vw,30px)}
+h2{font-size:clamp(18px,3.2vw,24px)}
+.sub{color:var(--sub)}
+.row{display:flex; gap:12px; flex-wrap:wrap}
+.col{flex:1 1 260px}
+label{display:block; font-weight:600; margin:6px 0}
+input,select,button,textarea{
+  width:100%; padding:12px; border-radius:12px; border:1px solid var(--muted);
+  font-size:16px; background:#fff; color:var(--ink);
+}
+button{background:var(--brand); color:#fff; border:1px solid #000; cursor:pointer; font-weight:700}
+button.ghost{background:#fff; color:#000}
+button.warn{background:#fff; color:#000}
+button.ok{background:#000; color:#fff}
+button.danger{background:#000; color:#fff}
+button:active{transform:scale(.99)}
+.toolbar{display:flex; gap:8px; flex-wrap:wrap}
+nav{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
+nav button{flex:1 1 120px}
+.badge{display:inline-block; padding:4px 10px; border-radius:999px; background:#f4f4f4; color:#000}
+.small{font-size:13px; color:var(--sub)}
+hr{border:none; border-top:1px dashed var(--muted); margin:12px 0}
+table{width:100%; border-collapse:collapse}
+th,td{border-bottom:1px solid #e5e7eb; padding:8px; text-align:center}
+tfoot td{font-weight:800}
+.kpi{display:flex; gap:10px; flex-wrap:wrap}
+.kpi .card{flex:1 1 200px; text-align:center}
+.center{text-align:center}
+.hidden{display:none}
+.flex{display:flex; gap:8px; align-items:center}
+.flex-col{display:flex; gap:8px; flex-direction:column}
+progress{width:100%; height:16px}
+.tag{display:inline-block;padding:2px 8px;border-radius:8px;background:#eee;margin:2px;font-size:12px;border:1px solid #ccc}
+.meal-item{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid #e5e7eb;padding:8px;border-radius:12px}
+.meal-item strong{flex:1}
+.meal-item input{width:90px}
+footer{padding:24px 0;color:#666;text-align:center}
+.camera{background:#fff;color:#000;border-radius:16px;padding:12px;border:1px solid #dcdcdc}
+video,canvas{width:100%;border-radius:12px;background:#000}
+.pred{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.stepper{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.step{flex:1;height:6px;background:#e2e2e2;border-radius:99px;position:relative}
+.step.done{background:#9e9e9e}
+.step.active{background:#000}
+.cups{display:flex;gap:6px;flex-wrap:wrap}
+.cup{width:44px;height:60px;border:2px solid #000;border-radius:10px;position:relative;overflow:hidden;cursor:pointer;background:#fff}
+.cup.fill::after{content:"";position:absolute;bottom:0;left:0;width:100%;height:70%;background:#000}
+.lang-switch{min-width:180px}
+.custom-goal-item{display:flex; gap:12px; align-items:center; padding:12px; border:1px solid #e5e7eb; border-radius:12px; margin-bottom:8px; background:#fafafa}
+.custom-goal-text{flex:1; font-size:16px; font-weight:bold}
+.custom-goal-checkbox{width:24px; height:24px; border:2px solid #000; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.custom-goal-checkbox.checked{background:#000; color:#fff}
+.custom-goal-checkbox.checked::after{content:"✓"; font-size:16px; font-weight:bold}
+.custom-goal-remove{background:transparent; border:none; color:#666; cursor:pointer; font-size:18px}
+.goal-completed{text-decoration:line-through; opacity:0.6}
+.dish-builder{background:#f9f9f9; padding:16px; border-radius:12px; margin:12px 0}
+.dish-ingredient{display:flex; gap:8px; align-items:center; margin-bottom:8px; padding:8px; background:white; border-radius:8px}
+.dish-ingredient select,.dish-ingredient input{flex:1}
+.dish-saved{background:#f0f0f0; padding:12px; border-radius:8px; margin:8px 0}
+.dish-saved h4{margin:0 0 8px 0}
+.dish-ingredient-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+}
+.dish-ingredient-grid select,
+.dish-ingredient-grid input {
+  width: 100%;
+}
+.workout-plan {background:#f9f9f9; padding:16px; border-radius:12px; margin:12px 0}
+.workout-day {margin-bottom:20px; padding:12px; border:1px solid #e5e7eb; border-radius:12px}
+.workout-exercise {display:flex; justify-content:space-between; align-items:center; padding:10px; margin:8px 0; background:white; border-radius:8px; border:1px solid #e5e7eb}
+.workout-exercise-info {flex:1}
+.workout-exercise-name {font-weight:bold; margin-bottom:4px}
+.workout-exercise-meta {font-size:14px; color:#666}
+.exercise-tutorial {color:#000; text-decoration:underline; cursor:pointer}
+.exercise-tutorial:hover {text-decoration:none}
+.workout-actions {display:flex; gap:8px}
+.workout-completed .workout-exercise-name {text-decoration: line-through; opacity:0.7}
+.workout-option {padding:20px; border:2px solid #000; border-radius:12px; text-align:center; cursor:pointer; margin:10px 0}
+.workout-option:hover {background:#f5f5f5}
+.plan-selection {display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0}
+.exercise-selector {max-height:300px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:8px; padding:8px}
+.exercise-option {padding:8px; border-bottom:1px solid #e5e7eb; cursor:pointer}
+.exercise-option:hover {background:#f5f5f5}
+.exercise-option.selected {background:#000; color:#fff}
+
+/* New styles for volume estimation */
+.volume-estimation {margin-top:16px; padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#f9f9f9}
+.volume-result {font-weight:bold; font-size:18px; margin:8px 0; text-align:center}
+.volume-controls {display:flex; gap:8px; flex-wrap:wrap; margin:12px 0}
+.volume-controls .col {flex:1 1 200px}
+.reference-option {padding:8px; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; text-align:center}
+.reference-option.selected {background:#000; color:#fff}
+.volume-canvas {width:100%; max-width:300px; margin:0 auto; display:block}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="row" style="align-items:center">
+      <div class="col" style="flex:1 1 auto">
+        <h1 id="appTitle">AI Calorie & Macro Tracker</h1>
+        <div class="small" id="subtitle">MVP — on‑device mock AI + manual adjust. Data saved locally.</div>
+      </div>
+      <div class="col" style="max-width:260px">
+        <label id="langLabel">Language</label>
+        <select id="langSelect" class="lang-switch"></select>
+      </div>
+    </div>
+  </div>
+
+  <nav id="nav" class="card hidden">
+    <button data-tab="home">Home</button>
+    <button data-tab="goals">Daily Goals</button>
+    <button data-tab="food">Your Food</button>
+    <button data-tab="log">Food Log</button>
+    <button data-tab="dishes">Make a Dish</button>
+    <button data-tab="workout">Workout</button>
+    <button data-tab="water">Water</button>
+    <button data-tab="profile">Profile</button>
+    <button data-tab="about">About</button>
+  </nav>
+
+  <!-- Onboarding Wizard -->
+  <div id="wizard" class="card">
+    <div class="stepper">
+      <div class="step active" id="s1"></div>
+      <div class="step" id="s2"></div>
+      <div class="step" id="s3"></div>
+    </div>
+    <div id="step1">
+      <h2 id="wTitle">Choose Language</h2>
+      <div class="row">
+        <div class="col">
+          <label id="wLangLabel">Language</label>
+          <select id="wLangSelect"></select>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button id="next1">Next</button>
+      </div>
+    </div>
+
+    <div id="step2" class="hidden">
+      <h2>Profile</h2>
+      <div class="row">
+        <div class="col">
+          <label>Sex</label>
+          <select id="sex">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Age (years)</label>
+          <input id="age" type="number" min="8" max="100" value="30">
+        </div>
+        <div class="col">
+          <label>Height (cm)</label>
+          <input id="height" type="number" min="100" max="230" value="170">
+        </div>
+        <div class="col">
+          <label>Weight (kg)</label>
+          <input id="weight" type="number" min="30" max="200" value="70">
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="ghost" id="back2">Back</button>
+        <button id="next2">Next</button>
+      </div>
+    </div>
+
+    <div id="step3" class="hidden">
+      <h2>Activity</h2>
+      <div class="row">
+        <div class="col">
+          <label>Workout days/week</label>
+          <input id="days" type="number" min="0" max="7" value="3">
+        </div>
+        <div class="col">
+          <label>Goal</label>
+          <select id="goal">
+            <option value="maintain">Maintain</option>
+            <option value="cut">Cut (-15%)</option>
+            <option value="bulk">Bulk (+10%)</option>
+          </select>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="ghost" id="back3">Back</button>
+        <button id="finish">Finish</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Home / Dashboard -->
+  <div id="home" class="card hidden">
+    <h2 id="dashTitle">Dashboard</h2>
+    <div class="kpi">
+      <div class="card">
+        <div class="small" data-i18n="calToday">Calories Today</div>
+        <div id="kcalToday" style="font-size:28px;font-weight:800">0</div>
+        <div class="small">Target: <span id="kcalTarget">0</span></div>
+        <progress id="kcalProg" max="100" value="0"></progress>
+      </div>
+      <div class="card">
+        <div class="small">Protein (g)</div>
+        <div id="protToday" style="font-size:28px;font-weight:800">0</div>
+        <div class="small">Target: <span id="protTarget">0</span></div>
+        <progress id="protProg" max="100" value="0"></progress>
+      </div>
+      <div class="card">
+        <div class="small">Fat (g)</div>
+        <div id="fatToday" style="font-size:28px;font-weight:800">0</div>
+        <div class="small">Target: <span id="fatTarget">0</span></div>
+        <progress id="fatProg" max="100" value="0"></progress>
+      </div>
+      <div class="card">
+        <div class="small">Carbs (g)</div>
+        <div id="carbToday" style="font-size:28px;font-weight:800">0</div>
+        <div class="small">Target: <span id="carbTarget">0</span></div>
+        <progress id="carbProg" max="100" value="0"></progress>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div class="badge">Streak: <span id="streak">0</span> 🔥</div>
+      </div>
+      <div class="col center">
+        <button id="toFood">Your Food</button>
+      </div>
+      <div class="col center">
+        <button class="ghost" id="toLog">Open Food Log</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Goals -->
+  <div id="goals" class="card hidden">
+    <h2>Daily Goals</h2>
+    <div class="row">
+      <div class="col"><label>Calories</label><input id="g_kcal" type="number"></div>
+      <div class="col"><label>Protein (g)</label><input id="g_prot" type="number"></div>
+      <div class="col"><label>Fat (g)</label><input id="g_fat" type="number"></div>
+      <div class="col"><label>Carbs (g)</label><input id="g_carb" type="number"></div>
+    </div>
+    <div class="toolbar">
+      <button id="saveGoals" class="ok">Save</button>
+      <button id="recalcGoals" class="ghost">Recalculate from Profile</button>
+    </div>
+    
+    <hr>
+    
+    <h3>Custom Daily Goals</h3>
+    <div class="toolbar">
+      <input type="text" id="newCustomGoal" placeholder="Add a custom goal (e.g., Walk 10k steps, Drink 2L water)">
+      <button id="addCustomGoal" class="ok">Add Goal</button>
+    </div>
+    <div id="customGoalsList"></div>
+  </div>
+
+  <!-- Your Food Page -->
+  <div id="food" class="card hidden">
+    <h2>Your Food</h2>
+    <div class="camera">
+      <video id="vid" autoplay playsinline muted></video>
+      <div class="toolbar">
+        <button id="startCam">Start Camera</button>
+        <button id="stopCam" class="ghost hidden">Stop Camera</button>
+        <button id="snap" class="ghost">Capture</button>
+        <button id="classify" class="ok">AI Guess</button>
+      </div>
+      <canvas id="frame" class="hidden"></canvas>
+      <div class="pred" id="pred"></div>
+      
+      <!-- NEW: Volume Estimation Section -->
+      <div id="volumeEstimation" class="volume-estimation hidden">
+        <h3>Food Volume Estimation</h3>
+        <div class="row">
+          <div class="col">
+            <label>Reference Object</label>
+            <div class="volume-controls">
+              <div class="reference-option" data-ref="plate">Plate (25cm)</div>
+              <div class="reference-option" data-ref="hand">Hand</div>
+              <div class="reference-option" data-ref="spoon">Spoon</div>
+              <div class="reference-option" data-ref="custom">Custom Size</div>
+            </div>
+          </div>
+          <div class="col">
+            <label>Custom Reference Size (cm)</label>
+            <input id="customRefSize" type="number" value="10" min="1" max="50">
+          </div>
+        </div>
+        <div class="toolbar">
+          <button id="estimateVolume" class="ok">Estimate Volume</button>
+        </div>
+        <canvas id="volumeCanvas" class="volume-canvas hidden"></canvas>
+        <div id="volumeResult" class="volume-result"></div>
+      </div>
+    </div>
+    <hr>
+    <h3>Portion Estimation</h3>
+    <div class="row">
+      <div class="col">
+        <label>Food Size</label>
+        <select id="foodSize">
+          <option value="small">Small (e.g., apple, egg)</option>
+          <option value="medium">Medium (e.g., chicken breast, banana)</option>
+          <option value="large">Large (e.g., steak, large fruit)</option>
+          <option value="bowl">Bowl (e.g., rice, pasta, salad)</option>
+          <option value="plate">Plate (e.g., full meal)</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Estimated Weight (g)</label>
+        <input id="estimatedWeight" type="number" readonly>
+        <div class="small">Based on food size selection</div>
+      </div>
+    </div>
+    <hr>
+    <h3>Add to Meal</h3>
+    <div class="row">
+      <div class="col">
+        <label>Food</label>
+        <input id="foodSearch" placeholder="Search or pick AI guess..." list="foodList">
+        <datalist id="foodList"></datalist>
+        <div class="small" id="foodHint">Examples: rice, chicken breast, apple, pizza</div>
+      </div>
+      <div class="col">
+        <label>Portion (g)</label>
+        <input id="portion" type="number" value="150">
+      </div>
+      <div class="col">
+        <label>Meal</label>
+        <select id="mealType">
+          <option>Breakfast</option>
+          <option>Lunch</option>
+          <option>Dinner</option>
+          <option>Snack</option>
+        </select>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="addMeal">Add to Log</button>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div id="log" class="card hidden">
+    <h2>Food Log — <span id="logDate"></span></h2>
+    <div id="logItems"></div>
+    <hr>
+    <table>
+      <thead><tr><th>Meal</th><th>Food</th><th>g</th><th>kcal</th><th>P</th><th>F</th><th>C</th><th></th></tr></thead>
+      <tbody id="logTable"></tbody>
+      <tfoot><tr><td colspan="3">Totals</td><td id="tKcal">0</td><td id="tP">0</td><td id="tF">0</td><td id="tC">0</td><td></td></tr></tfoot>
+    </table>
+    <div class="toolbar">
+      <button id="clearToday" class="danger">Clear Today</button>
+    </div>
+  </div>
+
+  <!-- Make a Dish -->
+  <div id="dishes" class="card hidden">
+    <h2>Make a Dish</h2>
+    <div class="dish-builder">
+      <div class="row">
+        <div class="col">
+          <label>Dish Name</label>
+          <input type="text" id="dishName" placeholder="Enter dish name (e.g., Chicken Salad)">
+        </div>
+      </div>
+      
+      <h4>Ingredients</h4>
+      <div id="dishIngredients">
+        <div class="dish-ingredient-grid">
+          <select class="ingredientSelect">
+            <option value="">Select ingredient</option>
+          </select>
+          <input type="number" class="ingredientGrams" placeholder="Grams" value="100">
+          <span class="small">Portion</span>
+          <button class="removeIngredient danger">×</button>
+        </div>
+      </div>
+      
+      <div class="toolbar">
+        <button id="addIngredient" class="ghost">+ Add Ingredient</button>
+        <button id="calculateDish" class="ok">Calculate Dish</button>
+        <button id="saveDish" class="ok">Save Dish</button>
+      </div>
+      
+      <div id="dishResults" class="hidden">
+        <h4>Dish Nutrition (per 100g)</h4>
+        <div class="row">
+          <div class="col"><strong>Calories:</strong> <span id="dishKcal">0</span></div>
+          <div class="col"><strong>Protein:</strong> <span id="dishProt">0</span>g</div>
+          <div class="col"><strong>Fat:</strong> <span id="dishFat">0</span>g</div>
+          <div class="col"><strong>Carbs:</strong> <span id="dishCarb">0</span>g</div>
+        </div>
+      </div>
+    </div>
+    
+    <hr>
+    
+    <h3>Saved Dishes</h3>
+    <div id="savedDishes"></div>
+  </div>
+
+  <!-- Workout Section -->
+  <div id="workout" class="card hidden">
+    <!-- Main Workout Selection -->
+    <div id="workoutMain">
+      <h2>Workout Plans</h2>
+      <p>Choose your workout plan type:</p>
+      
+      <div class="plan-selection">
+        <div class="workout-option" onclick="showWorkoutType('custom')">
+          <h3>Custom Plan</h3>
+          <p>Create your own workout plan</p>
+        </div>
+        <div class="workout-option" onclick="showWorkoutType('ready')">
+          <h3>Ready-Made Plans</h3>
+          <p>Choose from pre-built plans</p>
+        </div>
+      </div>
+      
+      <div id="currentPlanDisplay" class="hidden">
+        <hr>
+        <h3>Your Current Plan</h3>
+        <div id="currentPlanInfo"></div>
+        <div class="toolbar">
+          <button class="ok" onclick="showCurrentPlan()">View Plan</button>
+          <button class="danger" onclick="clearWorkoutPlan()">Clear Plan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ready-Made Plan Selection -->
+    <div id="workoutReady" class="hidden">
+      <h2>Ready-Made Plans</h2>
+      <div class="plan-selection">
+        <div class="workout-option" onclick="showWorkoutPlan('gym')">
+          <h3>Gym Plans</h3>
+          <p>PPL & Upper/Lower splits</p>
+        </div>
+        <div class="workout-option" onclick="showWorkoutPlan('home')">
+          <h3>Home Plans</h3>
+          <p>Weighted bag workouts</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="ghost" onclick="backToWorkoutMain()">← Back</button>
+      </div>
+    </div>
+
+    <!-- Gym Plan Selection -->
+    <div id="workoutGym" class="hidden">
+      <h2>Gym Workout Plans</h2>
+      <div class="plan-selection">
+        <div class="workout-option" onclick="selectReadyPlan('ppl')">
+          <h3>PPL (Push/Pull/Legs)</h3>
+          <p>6-day split focusing on muscle groups</p>
+        </div>
+        <div class="workout-option" onclick="selectReadyPlan('upperLower')">
+          <h3>Upper/Lower Split</h3>
+          <p>4-day upper and lower body focus</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="ghost" onclick="backToReadyPlans()">← Back</button>
+      </div>
+    </div>
+
+    <!-- Home Plan Selection -->
+    <div id="workoutHome" class="hidden">
+      <h2>Home Workout Plans</h2>
+      <div class="workout-option" onclick="selectReadyPlan('homePPL')">
+        <h3>Home PPL with Weighted Bag</h3>
+        <p>Push, Pull, Legs using weighted bag</p>
+      </div>
+      <div class="toolbar">
+        <button class="ghost" onclick="backToReadyPlans()">← Back</button>
+      </div>
+    </div>
+
+    <!-- Custom Plan Builder -->
+    <div id="workoutCustom" class="hidden">
+      <h2>Create Custom Plan</h2>
+      <div class="row">
+        <div class="col">
+          <label>Plan Name</label>
+          <input type="text" id="customPlanName" placeholder="Enter plan name">
+        </div>
+        <div class="col">
+          <label>Number of Days</label>
+          <select id="customPlanDays">
+            <option value="1">1 Day</option>
+            <option value="2">2 Days</option>
+            <option value="3">3 Days</option>
+            <option value="4">4 Days</option>
+            <option value="5">5 Days</option>
+            <option value="6">6 Days</option>
+            <option value="7">7 Days</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="customDaysContainer"></div>
+      
+      <div class="toolbar">
+        <button class="ghost" onclick="backToWorkoutMain()">← Back</button>
+        <button class="ok" onclick="saveCustomPlan()">Save Plan</button>
+      </div>
+    </div>
+
+    <!-- Exercise Selector -->
+    <div id="exerciseSelector" class="hidden">
+      <h3>Select Exercises</h3>
+      <div class="exercise-selector" id="exerciseList"></div>
+      <div class="toolbar">
+        <button class="ghost" onclick="backToCustomPlan()">← Back</button>
+        <button class="ok" onclick="addSelectedExercises()">Add Selected</button>
+      </div>
+    </div>
+
+    <!-- Plan Display -->
+    <div id="workoutPlanDisplay" class="hidden">
+      <h2 id="planDisplayTitle">Workout Plan</h2>
+      <div id="planDisplayContent"></div>
+      <div class="toolbar">
+        <button class="ghost" onclick="backToWorkoutMain()">← Back to Plans</button>
+        <button class="ok" onclick="startWorkout()">Start Workout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Water -->
+  <div id="water" class="card hidden">
+    <h2>Water Tracker</h2>
+    <div class="row">
+      <div class="col">
+        <label>Daily target (ml)</label>
+        <input id="waterTarget" type="number" value="2500">
+        <div class="small">Tip: ~35 ml per kg</div>
+      </div>
+      <div class="col">
+        <label>Cup size (ml)</label>
+        <input id="cupSize" type="number" value="250">
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="saveWater" class="ok">Save</button>
+      <button id="drink">Drink 1 cup</button>
+      <button id="resetWater" class="ghost">Reset Today</button>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div>Progress: <span id="waterProgTxt">0 / 0 ml</span></div>
+        <progress id="waterProg" max="100" value="0"></progress>
+      </div>
+    </div>
+    <div class="cups" id="cups"></div>
+  </div>
+
+  <!-- Profile -->
+  <div id="profile" class="card hidden">
+    <h2>Profile</h2>
+    <div id="profSummary"></div>
+    <div class="toolbar"><button id="restart" class="warn">Restart Wizard</button></div>
+  </div>
+
+  <!-- About -->
+  <div id="about" class="card hidden">
+    <h2>About</h2>
+    <p>This MVP runs fully in your browser. AI detection uses a generic MobileNet image classifier (best‑effort). Always adjust items/portions manually for accuracy.</p>
+    <p>Data is stored locally (this device only).</p>
+  </div>
+
+  <footer>© 2025 — MVP built for you. Monochrome edition.</footer>
+</div>
+
+<!-- TF.js & MobileNet -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+
+<!-- NEW: MediaPipe for segmentation -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/vision_bundle.js"></script>
+
+<script>
+// ====== i18n ======
+const I18N = {
+  en:{title:"AI Calorie & Macro Tracker", next:"Next", back:"Back", finish:"Finish", home:"Home", goals:"Daily Goals", food:"Your Food", log:"Food Log", dishes:"Make a Dish", workout:"Workout", water:"Water", profile:"Profile", about:"About", chooseLang:"Choose Language", language:"Language", hint:"Examples: rice, chicken breast, apple, pizza"},
+  ar:{title:"حساب السعرات والماكروز بالذكاء الاصطناعي", next:"التالي", back:"رجوع", finish:"إنهاء", home:"الرئيسية", goals:"الأهداف اليومية", food:"طعامك", log:"سجل الأكل", dishes:"اصنع طبق", workout:"تمارين", water:"الماء", profile:"الملف", about:"عن التطبيق", chooseLang:"اختر اللغة", language:"اللغة", hint:"أمثلة: أرز، صدر دجاج، تفاح، بيتزا"},
+  fr:{title:"Suivi Calories & Macros IA", next:"Suivant", back:"Retour", finish:"Terminer", home:"Accueil", goals:"Objectifs", food:"Votre Nourriture", log:"Journal", dishes:"Créer un Plat", workout:"Entraînement", water:"Eau", profile:"Profil", about:"À propos", chooseLang:"Choisir la langue", language:"Langue", hint:"Exemples : riz, blanc de poulet, pomme, pizza"},
+  es:{title:"Contador de Calorías y Macros IA", next:"Siguiente", back:"Atrás", finish:"Finalizar", home:"Inicio", goals:"Objetivos", food:"Tu Comida", log:"Registro", dishes:"Crear Plato", workout:"Entrenamiento", water:"Agua", profile:"Perfil", about:"Acerca de", chooseLang:"Elegir idioma", language:"Idioma", hint:"Ejemplos: arroz, pechuga de pollo, manzana, pizza"}
+};
+const LANGS = [
+  {k:'ar',label:'العربية'}, {k:'en',label:'English'}, {k:'fr',label:'Français'}, {k:'es',label:'Español'}
+];
+let LANG = 'ar';
+
+function fillLangSelects(){
+  const selects=[document.getElementById('langSelect'), document.getElementById('wLangSelect')];
+  selects.forEach(sel=>{ 
+    sel.innerHTML=''; 
+    LANGS.forEach(({k,label})=>{ 
+      const o=document.createElement('option'); 
+      o.value=k; 
+      o.textContent=label; 
+      sel.appendChild(o); 
+    }); 
+  });
+}
+
+function setLang(k){
+  LANG = k; 
+  const T = I18N[k]||I18N.en;
+  document.getElementById('appTitle').textContent = T.title;
+  document.getElementById('wTitle').textContent = T.chooseLang;
+  document.getElementById('langLabel').textContent = T.language;
+  document.getElementById('wLangLabel').textContent = T.language;
+  document.querySelectorAll('#nav button').forEach(b=>{ 
+    const key=b.dataset.tab; 
+    if(T[key]) b.textContent=T[key]; 
+  });
+  document.getElementById('foodHint').textContent = T.hint;
+  document.documentElement.dir = (k==='ar') ? 'rtl' : 'ltr';
+  document.documentElement.lang = k;
+  document.getElementById('langSelect').value = k;
+  document.getElementById('wLangSelect').value = k;
+  updateFoodLists();
+}
+
+// ====== State & Storage ======
+const SKEY = 'mvp_tracker_state_v2_mono';
+let state = JSON.parse(localStorage.getItem(SKEY) || '{}');
+
+if (!state.daysData) state.daysData = {};
+if (!state.foods) state.foods = [];
+if (!state.dishes) state.dishes = [];
+if (!state.customGoals) state.customGoals = {};
+if (!state.workoutPlan) state.workoutPlan = null;
+if (!state.workoutHistory) state.workoutHistory = {};
+
+if (!state.persistentGoals) {
+  state.persistentGoals = state.goals || calcMacros();
+}
+
+function save(){ 
+  localStorage.setItem(SKEY, JSON.stringify(state)); 
+}
+
+// ====== Wizard logic ======
+const step1 = document.getElementById('step1');
+const step2 = document.getElementById('step2');
+const step3 = document.getElementById('step3');
+
+function markSteps(a,b,c){
+  document.getElementById('s1').className = 'step' + (a ? ' active done' : '');
+  document.getElementById('s2').className = 'step' + (b ? ' active done' : '');
+  document.getElementById('s3').className = 'step' + (c ? ' active done' : '');
+}
+
+document.getElementById('next1').onclick = ()=>{
+  const lang = document.getElementById('wLangSelect').value; 
+  setLang(lang);
+  state.lang = lang; 
+  save();
+  step1.classList.add('hidden'); 
+  step2.classList.remove('hidden'); 
+  markSteps(false,true,false);
+};
+
+document.getElementById('langSelect').onchange = (e)=>{ 
+  setLang(e.target.value); 
+  state.lang=e.target.value; 
+  save(); 
+};
+
+document.getElementById('back2').onclick = ()=>{ 
+  step2.classList.add('hidden'); 
+  step1.classList.remove('hidden'); 
+  markSteps(true,false,false); 
+};
+
+document.getElementById('next2').onclick = ()=>{
+  state.sex = document.getElementById('sex').value;
+  state.age = +document.getElementById('age').value;
+  state.height = +document.getElementById('height').value;
+  state.weight = +document.getElementById('weight').value;
+  save();
+  step2.classList.add('hidden'); 
+  step3.classList.remove('hidden'); 
+  markSteps(false,false,true);
+};
+
+document.getElementById('back3').onclick = ()=>{ 
+  step3.classList.add('hidden'); 
+  step2.classList.remove('hidden'); 
+  markSteps(false,true,false); 
+};
+
+document.getElementById('finish').onclick = ()=>{
+  state.days = +document.getElementById('days').value;
+  state.goal = document.getElementById('goal').value;
+  calcGoalsFromProfile();
+  save();
+  document.getElementById('wizard').classList.add('hidden');
+  document.getElementById('nav').classList.remove('hidden');
+  showTab('home');
+};
+
+// ====== Tabs ======
+const tabs = ['home','goals','food','log','dishes','workout','water','profile','about'];
+document.getElementById('nav').addEventListener('click', (e)=>{
+  if(e.target.tagName!=='BUTTON') return;
+  showTab(e.target.dataset.tab);
+});
+
+function showTab(id){
+  tabs.forEach(t=>document.getElementById(t).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if(id==='home') refreshDashboard();
+  if(id==='log') refreshLog();
+  if(id==='water') refreshWaterUI();
+  if(id==='profile') renderProfile();
+  if(id==='goals') refreshCustomGoals();
+  if(id==='dishes') refreshDishes();
+  if(id==='workout') refreshWorkoutUI();
+}
+
+document.getElementById('toFood').onclick=()=>showTab('food');
+document.getElementById('toLog').onclick=()=>showTab('log');
+
+// ====== Calculations ======
+function activityFactor(days){
+  if(days<=0) return 1.2;
+  if(days<=2) return 1.375;
+  if(days<=4) return 1.55;
+  if(days<=6) return 1.725;
+  return 1.9;
+}
+
+function calcTDEE(){
+  const w=state.weight||70, h=state.height||175, a=state.age||25, s=state.sex||'male', d=state.days||3;
+  const bmr = (s==='male') ? (10*w + 6.25*h - 5*a + 5) : (10*w + 6.25*h - 5*a - 161);
+  let tdee = bmr * activityFactor(d);
+  if(state.goal==='cut') tdee *= 0.85;
+  if(state.goal==='bulk') tdee *= 1.10;
+  return Math.round(tdee);
+}
+
+function calcMacros(){
+  const kcal = calcTDEE();
+  const prot = Math.round((state.weight||70) * 1.8);
+  const fat = Math.round((state.weight||70) * 0.9);
+  let restK = kcal - (prot*4 + fat*9);
+  const carb = Math.max(0, Math.round(restK/4));
+  return {kcal, prot, fat, carb};
+}
+
+function calcGoalsFromProfile(){
+  const m = calcMacros();
+  state.persistentGoals = m;
+  state.goals = m; 
+  save();
+  fillGoals();
+}
+
+// ====== Goals UI ======
+function fillGoals(){
+  const g = state.persistentGoals || {};
+  document.getElementById('g_kcal').value = g.kcal || '';
+  document.getElementById('g_prot').value = g.prot || '';
+  document.getElementById('g_fat').value = g.fat || '';
+  document.getElementById('g_carb').value = g.carb || '';
+}
+
+document.getElementById('saveGoals').onclick = ()=>{
+  state.persistentGoals = {
+    kcal: +document.getElementById('g_kcal').value,
+    prot: +document.getElementById('g_prot').value,
+    fat: +document.getElementById('g_fat').value,
+    carb: +document.getElementById('g_carb').value
+  };
+  save();
+  alert('Goals saved!');
+};
+
+document.getElementById('recalcGoals').onclick = calcGoalsFromProfile;
+
+// ====== Custom Goals ======
+function refreshCustomGoals() {
+  const today = new Date().toDateString();
+  const container = document.getElementById('customGoalsList');
+  container.innerHTML = '';
+  
+  if (!state.customGoals[today]) {
+    state.customGoals[today] = [];
+  }
+  
+  const persistentGoals = state.persistentCustomGoals || [];
+  
+  if (persistentGoals.length === 0) {
+    container.innerHTML = '<p>No custom goals yet. Add some above!</p>';
+    return;
+  }
+  
+  persistentGoals.forEach((goal, index) => {
+    const isCompleted = state.customGoals[today].includes(index);
+    const goalEl = document.createElement('div');
+    goalEl.className = `custom-goal-item ${isCompleted ? 'goal-completed' : ''}`;
+    goalEl.innerHTML = `
+      <div class="custom-goal-checkbox ${isCompleted ? 'checked' : ''}" data-index="${index}"></div>
+      <div class="custom-goal-text">${goal}</div>
+      <button class="custom-goal-remove" data-index="${index}">×</button>
+    `;
+    container.appendChild(goalEl);
+  });
+  
+  container.querySelectorAll('.custom-goal-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('click', toggleCustomGoal);
+  });
+  
+  container.querySelectorAll('.custom-goal-remove').forEach(button => {
+    button.addEventListener('click', removeCustomGoal);
+  });
+}
+
+function toggleCustomGoal(e) {
+  const index = parseInt(e.target.dataset.index);
+  const today = new Date().toDateString();
+  
+  if (!state.customGoals[today]) {
+    state.customGoals[today] = [];
+  }
+  
+  const goalIndex = state.customGoals[today].indexOf(index);
+  if (goalIndex > -1) {
+    state.customGoals[today].splice(goalIndex, 1);
+  } else {
+    state.customGoals[today].push(index);
+  }
+  
+  save();
+  refreshCustomGoals();
+}
+
+function removeCustomGoal(e) {
+  const index = parseInt(e.target.dataset.index);
+  const persistentGoals = state.persistentCustomGoals || [];
+  
+  if (index >= 0 && index < persistentGoals.length) {
+    persistentGoals.splice(index, 1);
+    state.persistentCustomGoals = persistentGoals;
+    
+    Object.keys(state.customGoals).forEach(date => {
+      state.customGoals[date] = state.customGoals[date]
+        .filter(i => i !== index)
+        .map(i => i > index ? i - 1 : i);
+    });
+    
+    save();
+    refreshCustomGoals();
+  }
+}
+
+document.getElementById('addCustomGoal').onclick = () => {
+  const input = document.getElementById('newCustomGoal');
+  const text = input.value.trim();
+  
+  if (!text) return;
+  
+  if (!state.persistentCustomGoals) {
+    state.persistentCustomGoals = [];
+  }
+  
+  state.persistentCustomGoals.push(text);
+  input.value = '';
+  save();
+  refreshCustomGoals();
+};
+
+// ====== Dashboard ======
+function refreshDashboard(){
+  const today = new Date().toDateString();
+  const dayData = state.daysData[today] || {foods:[]};
+  const totals = dayData.foods.reduce((a,f)=>({
+    kcal: a.kcal + f.kcal, prot: a.prot + f.prot, 
+    fat: a.fat + f.fat, carb: a.carb + f.carb
+  }), {kcal:0, prot:0, fat:0, carb:0});
+  
+  const goals = state.persistentGoals || {};
+  
+  document.getElementById('kcalToday').textContent = totals.kcal;
+  document.getElementById('protToday').textContent = totals.prot;
+  document.getElementById('fatToday').textContent = totals.fat;
+  document.getElementById('carbToday').textContent = totals.carb;
+  
+  document.getElementById('kcalTarget').textContent = goals.kcal || 0;
+  document.getElementById('protTarget').textContent = goals.prot || 0;
+  document.getElementById('fatTarget').textContent = goals.fat || 0;
+  document.getElementById('carbTarget').textContent = goals.carb || 0;
+  
+  document.getElementById('kcalProg').value = goals.kcal ? Math.min(100, (totals.kcal/goals.kcal)*100) : 0;
+  document.getElementById('protProg').value = goals.prot ? Math.min(100, (totals.prot/goals.prot)*100) : 0;
+  document.getElementById('fatProg').value = goals.fat ? Math.min(100, (totals.fat/goals.fat)*100) : 0;
+  document.getElementById('carbProg').value = goals.carb ? Math.min(100, (totals.carb/goals.carb)*100) : 0;
+  
+  const dates = Object.keys(state.daysData).sort();
+  let streak = 0;
+  const oneDay = 24*60*60*1000;
+  let prev = new Date();
+  for(let i=dates.length-1; i>=0; i--){
+    const d = new Date(dates[i]);
+    if(prev - d <= oneDay) streak++; else break;
+    prev = d;
+  }
+  document.getElementById('streak').textContent = streak;
+}
+
+// ====== Food Database ======
+const FOOD_DB = {
+  "rice": {kcal:130, prot:2.7, fat:0.3, carb:28, ar:"أرز"},
+  "chicken breast": {kcal:165, prot:31, fat:3.6, carb:0, ar:"صدر دجاج"},
+  "apple": {kcal:52, prot:0.3, fat:0.2, carb:14, ar:"تفاح"},
+  "pizza": {kcal:266, prot:11, fat:10, carb:33, ar:"بيتزا"},
+  "egg": {kcal:155, prot:13, fat:11, carb:1.1, ar:"بيض"},
+  "bread": {kcal:265, prot:9, fat:3.2, carb:49, ar:"خبز"},
+  "milk": {kcal:42, prot:3.4, fat:1, carb:5, ar:"حليب"},
+  "banana": {kcal:89, prot:1.1, fat:0.3, carb:23, ar:"موز"},
+  "pasta": {kcal:131, prot:5, fat:1.1, carb:25, ar:"معكرونة"},
+  "beef": {kcal:250, prot:26, fat:15, carb:0, ar:"لحم بقري"},
+  "fish": {kcal:206, prot:22, fat:13, carb:0, ar:"سمك"},
+  "cheese": {kcal:402, prot:25, fat:33, carb:1.3, ar:"جبن"},
+  "yogurt": {kcal:59, prot:3.5, fat:1.5, carb:4.7, ar:"زبادي"},
+  "potato": {kcal:77, prot:2, fat:0.1, carb:17, ar:"بطاطس"},
+  "tomato": {kcal:18, prot:0.9, fat:0.2, carb:3.9, ar:"طماطم"},
+  "cucumber": {kcal:15, prot:0.7, fat:0.1, carb:3.6, ar:"خيار"},
+  "carrot": {kcal:41, prot:0.9, fat:0.2, carb:10, ar:"جزر"},
+  "onion": {kcal:40, prot:1.1, fat:0.1, carb:9, ar:"بصل"},
+  "orange": {kcal:47, prot:0.9, fat:0.1, carb:12, ar:"برتقال"},
+  "strawberry": {kcal:32, prot:0.7, fat:0.3, carb:8, ar:"فراولة"},
+  "watermelon": {kcal:30, prot:0.6, fat:0.2, carb:8, ar:"بطيخ"},
+  "grape": {kcal:69, prot:0.7, fat:0.2, carb:18, ar:"عنب"},
+  "peach": {kcal:39, prot:0.9, fat:0.3, carb:10, ar:"خوخ"},
+  "pear": {kcal:57, prot:0.4, fat:0.1, carb:15, ar:"كمثرى"},
+  "avocado": {kcal:160, prot:2, fat:15, carb:9, ar:"أفوكادو"},
+  "broccoli": {kcal:34, prot:2.8, fat:0.4, carb:7, ar:"بروكلي"},
+  "spinach": {kcal:23, prot:2.9, fat:0.4, carb:3.6, ar:"سبانخ"},
+  "lettuce": {kcal:15, prot:1.4, fat:0.2, carb:2.9, ar:"خس"},
+  "olive oil": {kcal:884, prot:0, fat:100, carb:0, ar:"زيت زيتون"},
+  "butter": {kcal:717, prot:0.9, fat:81, carb:0.1, ar:"زبدة"},
+  "sugar": {kcal:387, prot:0, fat:0, carb:100, ar:"سكر"},
+  "honey": {kcal:304, prot:0.3, fat:0, carb:82, ar:"عسل"},
+  "almond": {kcal:579, prot:21, fat:50, carb:22, ar:"لوز"},
+  "peanut": {kcal:567, prot:26, fat:49, carb:16, ar:"فول سوداني"},
+  "walnut": {kcal:654, prot:15, fat:65, carb:14, ar:"جوز"},
+  "chicken thigh": {kcal:209, prot:26, fat:11, carb:0, ar:"فخذ دجاج"},
+  "salmon": {kcal:208, prot:20, fat:13, carb:0, ar:"سلمون"},
+  "tuna": {kcal:132, prot:29, fat:1, carb:0, ar:"تونة"},
+  "shrimp": {kcal:85, prot:18, fat:0.9, carb:0.2, ar:"جمبري"},
+  "lamb": {kcal:294, prot:25, fat:21, carb:0, ar:"لحم ضأن"},
+  "pork": {kcal:242, prot:25, fat:14, carb:0, ar:"لحم خنزير"},
+  "tofu": {kcal:76, prot:8, fat:4.8, carb:1.9, ar:"توفو"},
+  "lentil": {kcal:116, prot:9, fat:0.4, carb:20, ar:"عدس"},
+  "chickpea": {kcal:139, prot:7, fat:2.1, carb:22, ar:"حمص"},
+  "bean": {kcal:127, prot:9, fat:0.5, carb:23, ar:"فاصوليا"},
+  "corn": {kcal:86, prot:3.3, fat:1.4, carb:19, ar:"ذرة"},
+  "pea": {kcal:81, prot:5, fat:0.4, carb:14, ar:"بازلاء"},
+  "bell pepper": {kcal:31, prot:1, fat:0.3, carb:6, ar:"فلفل رومي"},
+  "mushroom": {kcal:22, prot:3.1, fat:0.3, carb:3.3, ar:"فطر"},
+  "garlic": {kcal:149, prot:6.4, fat:0.5, carb:33, ar:"ثوم"},
+  "ginger": {kcal:80, prot:1.8, fat:0.8, carb:18, ar:"زنجبيل"},
+  "lemon": {kcal:29, prot:1.1, fat:0.3, carb:9, ar:"ليمون"},
+  "pineapple": {kcal:50, prot:0.5, fat:0.1, carb:13, ar:"أناناس"},
+  "mango": {kcal:60, prot:0.8, fat:0.4, carb:15, ar:"مانجو"},
+  "kiwi": {kcal:61, prot:1.1, fat:0.5, carb:15, ar:"كيوي"},
+  "pomegranate": {kcal:83, prot:1.7, fat:1.2, carb:19, ar:"رمان"},
+  "fig": {kcal:74, prot:0.8, fat:0.3, carb:19, ar:"تين"},
+  "date": {kcal:282, prot:2.5, fat:0.4, carb:75, ar:"تمر"},
+  "coconut": {kcal:354, prot:3.3, fat:33, carb:15, ar:"جوز الهند"},
+  "cashew": {kcal:553, prot:18, fat:44, carb:30, ar:"كاجو"},
+  "pistachio": {kcal:562, prot:20, fat:45, carb:28, ar:"فستق"},
+  "sunflower seed": {kcal:584, prot:21, fat:51, carb:20, ar:"بذور دوار الشمس"},
+  "pumpkin seed": {kcal:559, prot:30, fat:49, carb:11, ar:"بذور قرع"},
+  "flax seed": {kcal:534, prot:18, fat:42, carb:29, ar:"بذور الكتان"},
+  "chia seed": {kcal:486, prot:17, fat:31, carb:42, ar:"بذور الشيا"},
+  "quinoa": {kcal:120, prot:4.4, fat:1.9, carb:21, ar:"كينوا"},
+  "oatmeal": {kcal:68, prot:2.4, fat:1.4, carb:12, ar:"شوفان"},
+  "couscous": {kcal:112, prot:4, fat:0.2, carb:23, ar:"كسكس"},
+  "bulgur": {kcal:83, prot:3.1, fat:0.2, carb:18, ar:"برغل"},
+  "soy milk": {kcal:54, prot:3.3, fat:1.8, carb:6, ar:"حليب الصويا"},
+  "almond milk": {kcal:17, prot:0.6, fat:1.5, carb:0.6, ar:"حليب اللوز"},
+  "coconut milk": {kcal:230, prot:2.3, fat:24, carb:6, ar:"حليب جوز الهند"},
+  "yogurt greek": {kcal:59, prot:10, fat:0.4, carb:3.6, ar:"زبادي يوناني"},
+  "cottage cheese": {kcal:98, prot:11, fat:4.3, carb:3.4, ar:"جبنة قريش"},
+  "mozzarella": {kcal:280, prot:28, fat:17, carb:3.1, ar:"موزاريلا"},
+  "parmesan": {kcal:431, prot:38, fat:29, carb:4.1, ar:"بارميزان"},
+  "feta": {kcal:264, prot:14, fat:21, carb:4.1, ar:"جبنة فيتا"},
+  "cream cheese": {kcal:342, prot:6, fat:34, carb:4.1, ar:"جبنة كريمية"},
+  "sour cream": {kcal:198, prot:2.1, fat:20, carb:4.1, ar:"قشدة حامضة"},
+  "mayonnaise": {kcal:700, prot:1, fat:77, carb:2.6, ar:"مايونيز"},
+  "ketchup": {kcal:101, prot:1, fat:0.1, carb:25, ar:"كاتشب"},
+  "mustard": {kcal:66, prot:4.4, fat:3.3, carb:6, ar:"خردل"},
+  "soy sauce": {kcal:53, prot:8, fat:0.1, carb:5, ar:"صلصة الصويا"},
+  "vinegar": {kcal:18, prot:0, fat:0, carb:0.9, ar:"خل"},
+  "salt": {kcal:0, prot:0, fat:0, carb:0, ar:"ملح"},
+  "pepper": {kcal:251, prot:10, fat:3.3, carb:64, ar:"فلفل أسود"},
+  "paprika": {kcal:282, prot:14, fat:13, carb:54, ar:"بابريكا"},
+  "cinnamon": {kcal:247, prot:4, fat:1.2, carb:81, ar:"قرفة"},
+  "turmeric": {kcal:354, prot:8, fat:10, carb:65, ar:"كركم"},
+  "cumin": {kcal:375, prot:18, fat:22, carb:44, ar:"كمون"},
+  "coriander": {kcal:23, prot:2.1, fat:0.5, carb:4, ar:"كزبرة"},
+  "basil": {kcal:22, prot:3.2, fat:0.6, carb:3, ar:"ريحان"},
+  "parsley": {kcal:36, prot:3, fat:0.8, carb:6, ar:"بقدونس"},
+  "mint": {kcal:44, prot:3.3, fat:0.7, carb:8, ar:"نعناع"},
+  "thyme": {kcal:101, prot:5.6, fat:1.7, carb:24, ar:"زعتر"},
+  "rosemary": {kcal:131, prot:3.3, fat:5.9, carb:21, ar:"إكليل الجبل"},
+  "oregano": {kcal:265, prot:9, fat:4.3, carb:69, ar:"أوريجانو"},
+  "sage": {kcal:315, prot:11, fat:13, carb:61, ar:"المريمية"},
+  "dill": {kcal:43, prot:3.5, fat:1.1, carb:7, ar:"شبت"},
+  "chive": {kcal:30, prot:3.3, fat:0.7, carb:4.4, ar:"الثوم المعمر"},
+  "shallot": {kcal:72, prot:2.5, fat:0.1, carb:17, ar:"كراث"}
+};
+
+function updateFoodLists() {
+  const foodList = document.getElementById('foodList');
+  foodList.innerHTML = '';
+  
+  Object.keys(FOOD_DB).forEach(food => {
+    const option = document.createElement('option');
+    option.value = food;
+    foodList.appendChild(option);
+  });
+  
+  document.querySelectorAll('.ingredientSelect').forEach(select => {
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">Select ingredient</option>';
+    
+    Object.keys(FOOD_DB).forEach(food => {
+      const option = document.createElement('option');
+      option.value = food;
+      option.textContent = food;
+      select.appendChild(option);
+    });
+    
+    select.value = currentValue;
+  });
+}
+
+// ====== Camera & AI ======
+let model, video, canvas, ctx;
+
+async function loadModel(){
+  try{
+    model = await mobilenet.load({version:2, alpha:1.0});
+    console.log('Model loaded');
+  }catch(e){
+    console.error('Model load failed:', e);
+  }
+}
+
+document.getElementById('startCam').onclick = async ()=>{
+  video = document.getElementById('vid');
+  canvas = document.getElementById('frame');
+  ctx = canvas.getContext('2d');
+  
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    video.srcObject = stream;
+    document.getElementById('startCam').classList.add('hidden');
+    document.getElementById('stopCam').classList.remove('hidden');
+  }catch(e){
+    alert('Camera error: '+e.message);
+  }
+};
+
+document.getElementById('stopCam').onclick = ()=>{
+  if(video.srcObject){
+    video.srcObject.getTracks().forEach(t=>t.stop());
+    video.srcObject = null;
+  }
+  document.getElementById('startCam').classList.remove('hidden');
+  document.getElementById('stopCam').classList.add('hidden');
+};
+
+document.getElementById('snap').onclick = ()=>{
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0);
+  canvas.classList.remove('hidden');
+  // NEW: Show volume estimation section
+  document.getElementById('volumeEstimation').classList.remove('hidden');
+};
+
+document.getElementById('classify').onclick = async ()=>{
+  if(!model) await loadModel();
+  if(!video.srcObject) return alert('Start camera first');
+  
+  const preds = await model.classify(video);
+  const container = document.getElementById('pred');
+  container.innerHTML = '';
+  
+  preds.forEach(p=>{
+    const btn = document.createElement('button');
+    btn.className = 'ghost';
+    btn.textContent = `${p.className} (${Math.round(p.probability*100)}%)`;
+    btn.onclick = ()=> document.getElementById('foodSearch').value = p.className;
+    container.appendChild(btn);
+  });
+};
+
+// ====== NEW: Volume Estimation ======
+let segmenter = null;
+
+async function initVolumeEstimation() {
+  try {
+    // Initialize MediaPipe Image Segmenter
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
+    );
+    
+    segmenter = await ImageSegmenter.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite"
+      },
+      runningMode: "IMAGE",
+      outputCategoryMask: true,
+      outputConfidenceMasks: false
+    });
+    
+    console.log("Volume estimation initialized");
+  } catch (error) {
+    console.error("Error initializing volume estimation:", error);
+    // Fallback: Use basic estimation without segmentation
+  }
+}
+
+document.getElementById('estimateVolume').onclick = async ()=>{
+  if (!segmenter) {
+    // Use fallback estimation if segmentation is not available
+    estimateVolumeFallback();
+    return;
+  }
+  
+  try {
+    // Perform segmentation
+    const segmentationResults = segmenter.segment(canvas);
+    
+    // Get the mask
+    const mask = segmentationResults.categoryMask;
+    
+    // Draw the mask on canvas for visualization
+    const volumeCanvas = document.getElementById('volumeCanvas');
+    const ctxVol = volumeCanvas.getContext('2d');
+    volumeCanvas.width = mask.width;
+    volumeCanvas.height = mask.height;
+    
+    // Create visualization of food area
+    const imageData = ctxVol.createImageData(mask.width, mask.height);
+    const data = imageData.data;
+    
+    // Convert mask to visual representation (food areas in green)
+    let foodPixels = 0;
+    for (let i = 0; i < mask.data.length; i++) {
+      const j = i * 4;
+      // Assuming food is detected as foreground (value 1 in mask)
+      if (mask.data[i] === 1) {
+        data[j] = 0;     // R
+        data[j + 1] = 255; // G
+        data[j + 2] = 0;   // B
+        data[j + 3] = 128; // A (semi-transparent)
+        foodPixels++;
+      } else {
+        data[j] = 0;     // R
+        data[j + 1] = 0;   // G
+        data[j + 2] = 0;   // B
+        data[j + 3] = 50;  // A (more transparent)
+      }
+    }
+    
+    ctxVol.putImageData(imageData, 0, 0);
+    volumeCanvas.classList.remove('hidden');
+    
+    // Calculate food area percentage
+    const totalPixels = mask.width * mask.height;
+    const foodAreaRatio = foodPixels / totalPixels;
+    
+    // Estimate volume based on area and reference
+    const estimatedVolume = estimateVolumeFromArea(foodAreaRatio);
+    
+    // Display result
+    document.getElementById('volumeResult').textContent = 
+      `Estimated portion: ~${estimatedVolume.volume} ml (≈ ${estimatedVolume.weight} g)`;
+    
+    // Update the portion input with the estimated weight
+    document.getElementById('estimatedWeight').value = estimatedVolume.weight;
+    document.getElementById('portion').value = estimatedVolume.weight;
+    
+  } catch (error) {
+    console.error("Error estimating volume:", error);
+    // Fallback to basic estimation
+    estimateVolumeFallback();
+  }
+};
+
+function estimateVolumeFromArea(foodAreaRatio) {
+  // Get reference size
+  const referenceOption = document.querySelector('.reference-option.selected');
+  const customSize = document.getElementById('customRefSize').value;
+  let referenceSize = 25; // Default plate size in cm
+  
+  if (referenceOption) {
+    const refType = referenceOption.dataset.ref;
+    if (refType === 'plate') referenceSize = 25;
+    else if (refType === 'hand') referenceSize = 10; // Average hand width
+    else if (refType === 'spoon') referenceSize = 15; // Spoon length
+    else if (refType === 'custom') referenceSize = parseFloat(customSize) || 10;
+  }
+  
+  // Estimate volume based on area and reference
+  // This is a simplified estimation
+  const estimatedArea = foodAreaRatio * Math.pow(referenceSize, 2); // cm²
+  const estimatedVolume = Math.round(estimatedArea * 0.8); // Rough conversion to cm³/ml
+  
+  // Convert to weight based on typical food density (~1 g/ml for many foods)
+  const estimatedWeight = Math.round(estimatedVolume * 0.9); // Adjust for typical food density
+  
+  return { volume: estimatedVolume, weight: estimatedWeight };
+}
+
+function estimateVolumeFallback() {
+  // Fallback estimation when segmentation is not available
+  const referenceOption = document.querySelector('.reference-option.selected');
+  const customSize = document.getElementById('customRefSize').value;
+  let referenceSize = 25;
+  
+  if (referenceOption) {
+    const refType = referenceOption.dataset.ref;
+    if (refType === 'plate') referenceSize = 25;
+    else if (refType === 'hand') referenceSize = 10;
+    else if (refType === 'spoon') referenceSize = 15;
+    else if (refType === 'custom') referenceSize = parseFloat(customSize) || 10;
+  }
+  
+  // Simple estimation based on food size selection
+  const size = document.getElementById('foodSize').value;
+  let volume = 200; // default medium
+  
+  if(size==='small') volume = 80;
+  if(size==='medium') volume = 200;
+  if(size==='large') volume = 350;
+  if(size==='bowl') volume = 300;
+  if(size==='plate') volume = 500;
+  
+  // Adjust based on reference size
+  const adjustedVolume = Math.round(volume * (referenceSize / 25));
+  const estimatedWeight = Math.round(adjustedVolume * 0.9);
+  
+  document.getElementById('volumeResult').textContent = 
+    `Estimated portion: ~${adjustedVolume} ml (≈ ${estimatedWeight} g)`;
+  
+  document.getElementById('estimatedWeight').value = estimatedWeight;
+  document.getElementById('portion').value = estimatedWeight;
+}
+
+// Initialize reference option selection
+document.querySelectorAll('.reference-option').forEach(option => {
+  option.addEventListener('click', function() {
+    document.querySelectorAll('.reference-option').forEach(opt => opt.classList.remove('selected'));
+    this.classList.add('selected');
+  });
+});
+
+// Set default reference option
+document.querySelector('.reference-option[data-ref="plate"]').classList.add('selected');
+
+// Portion estimation based on food size
+document.getElementById('foodSize').onchange = (e)=>{
+  const size = e.target.value;
+  let weight = 100;
+  
+  switch(size){
+    case 'small': weight = 50; break;
+    case 'medium': weight = 150; break;
+    case 'large': weight = 250; break;
+    case 'bowl': weight = 300; break;
+    case 'plate': weight = 500; break;
+  }
+  
+  document.getElementById('estimatedWeight').value = weight;
+  document.getElementById('portion').value = weight;
+};
+
+// ====== Add to Meal ======
+document.getElementById('addMeal').onclick = ()=>{
+  const food = document.getElementById('foodSearch').value.trim().toLowerCase();
+  const portion = +document.getElementById('portion').value;
+  const meal = document.getElementById('mealType').value;
+  
+  if(!food || !FOOD_DB[food]){
+    alert('Please select a valid food from the list');
+    return;
+  }
+  
+  const info = FOOD_DB[food];
+  const factor = portion / 100;
+  
+  const item = {
+    food, portion, meal,
+    kcal: Math.round(info.kcal * factor),
+    prot: Math.round(info.prot * factor * 10)/10,
+    fat: Math.round(info.fat * factor * 10)/10,
+    carb: Math.round(info.carb * factor * 10)/10,
+    id: Date.now()
+  };
+  
+  const today = new Date().toDateString();
+  if(!state.daysData[today]) state.daysData[today] = {foods:[]};
+  state.daysData[today].foods.push(item);
+  save();
+  
+  document.getElementById('foodSearch').value = '';
+  document.getElementById('portion').value = 150;
+  
+  alert(`Added ${portion}g of ${food} to ${meal}`);
+  refreshDashboard();
+  if(document.getElementById('log').classList.contains('hidden')===false) refreshLog();
+};
+
+// ====== Food Log ======
+function refreshLog(){
+  const today = new Date().toDateString();
+  const dayData = state.daysData[today] || {foods:[]};
+  const tbody = document.getElementById('logTable');
+  const dateEl = document.getElementById('logDate');
+  
+  dateEl.textContent = today;
+  tbody.innerHTML = '';
+  
+  let tKcal=0, tP=0, tF=0, tC=0;
+  
+  dayData.foods.forEach((f,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${f.meal}</td>
+      <td>${f.food}</td>
+      <td>${f.portion}</td>
+      <td>${f.kcal}</td>
+      <td>${f.prot}</td>
+      <td>${f.fat}</td>
+      <td>${f.carb}</td>
+      <td><button class="danger" data-id="${f.id}">×</button></td>
+    `;
+    tbody.appendChild(tr);
+    
+    tKcal += f.kcal;
+    tP += f.prot;
+    tF += f.fat;
+    tC += f.carb;
+  });
+  
+  document.getElementById('tKcal').textContent = tKcal;
+  document.getElementById('tP').textContent = Math.round(tP*10)/10;
+  document.getElementById('tF').textContent = Math.round(tF*10)/10;
+  document.getElementById('tC').textContent = Math.round(tC*10)/10;
+  
+  // Remove item handlers
+  tbody.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{
+      const id = +b.dataset.id;
+      state.daysData[today].foods = state.daysData[today].foods.filter(x=>x.id!==id);
+      save();
+      refreshLog();
+      refreshDashboard();
+    };
+  });
+}
+
+document.getElementById('clearToday').onclick = ()=>{
+  if(confirm('Clear all food entries for today?')){
+    const today = new Date().toDateString();
+    state.daysData[today] = {foods:[]};
+    save();
+    refreshLog();
+    refreshDashboard();
+  }
+};
+
+// ====== Make a Dish ======
+function refreshDishes() {
+  updateFoodLists();
+  
+  const savedContainer = document.getElementById('savedDishes');
+  savedContainer.innerHTML = '';
+  
+  if (!state.dishes || state.dishes.length === 0) {
+    savedContainer.innerHTML = '<p>No saved dishes yet.</p>';
+    return;
+  }
+  
+  state.dishes.forEach((dish, index) => {
+    const dishEl = document.createElement('div');
+    dishEl.className = 'dish-saved';
+    dishEl.innerHTML = `
+      <h4>${dish.name}</h4>
+      <div class="row">
+        <div class="col"><strong>Calories:</strong> ${dish.kcal} per 100g</div>
+        <div class="col"><strong>Protein:</strong> ${dish.prot}g</div>
+        <div class="col"><strong>Fat:</strong> ${dish.fat}g</div>
+        <div class="col"><strong>Carbs:</strong> ${dish.carb}g</div>
+      </div>
+      <div class="toolbar">
+        <button class="ok" onclick="addDishToLog(${index})">Add to Today's Log</button>
+        <button class="danger" onclick="deleteDish(${index})">Delete</button>
+      </div>
+    `;
+    savedContainer.appendChild(dishEl);
+  });
+}
+
+document.getElementById('addIngredient').onclick = () => {
+  const container = document.getElementById('dishIngredients');
+  const newIngredient = document.createElement('div');
+  newIngredient.className = 'dish-ingredient-grid';
+  newIngredient.innerHTML = `
+    <select class="ingredientSelect">
+      <option value="">Select ingredient</option>
+    </select>
+    <input type="number" class="ingredientGrams" placeholder="Grams" value="100">
+    <span class="small">Portion</span>
+    <button class="removeIngredient danger">×</button>
+  `;
+  container.appendChild(newIngredient);
+  updateFoodLists();
+  
+  // Add event listener to remove button
+  newIngredient.querySelector('.removeIngredient').onclick = () => {
+    container.removeChild(newIngredient);
+  };
+};
+
+document.getElementById('calculateDish').onclick = () => {
+  const ingredients = Array.from(document.querySelectorAll('.dish-ingredient-grid'));
+  let totalWeight = 0;
+  let totalKcal = 0, totalProt = 0, totalFat = 0, totalCarb = 0;
+  
+  for (let ing of ingredients) {
+    const food = ing.querySelector('.ingredientSelect').value;
+    const grams = +ing.querySelector('.ingredientGrams').value;
+    
+    if (!food || !FOOD_DB[food]) continue;
+    
+    totalWeight += grams;
+    const info = FOOD_DB[food];
+    const factor = grams / 100;
+    
+    totalKcal += info.kcal * factor;
+    totalProt += info.prot * factor;
+    totalFat += info.fat * factor;
+    totalCarb += info.carb * factor;
+  }
+  
+  if (totalWeight === 0) {
+    alert('Please add at least one ingredient');
+    return;
+  }
+  
+  // Calculate per 100g
+  const factor = 100 / totalWeight;
+  const dishKcal = Math.round(totalKcal * factor);
+  const dishProt = Math.round(totalProt * factor * 10) / 10;
+  const dishFat = Math.round(totalFat * factor * 10) / 10;
+  const dishCarb = Math.round(totalCarb * factor * 10) / 10;
+  
+  document.getElementById('dishKcal').textContent = dishKcal;
+  document.getElementById('dishProt').textContent = dishProt;
+  document.getElementById('dishFat').textContent = dishFat;
+  document.getElementById('dishCarb').textContent = dishCarb;
+  
+  document.getElementById('dishResults').classList.remove('hidden');
+};
+
+document.getElementById('saveDish').onclick = () => {
+  const dishName = document.getElementById('dishName').value.trim();
+  if (!dishName) {
+    alert('Please enter a dish name');
+    return;
+  }
+  
+  const dishKcal = +document.getElementById('dishKcal').textContent;
+  const dishProt = +document.getElementById('dishProt').textContent;
+  const dishFat = +document.getElementById('dishFat').textContent;
+  const dishCarb = +document.getElementById('dishCarb').textContent;
+  
+  if (!state.dishes) state.dishes = [];
+  
+  state.dishes.push({
+    name: dishName,
+    kcal: dishKcal,
+    prot: dishProt,
+    fat: dishFat,
+    carb: dishCarb
+  });
+  
+  save();
+  refreshDishes();
+  
+  // Reset form
+  document.getElementById('dishName').value = '';
+  document.getElementById('dishIngredients').innerHTML = `
+    <div class="dish-ingredient-grid">
+      <select class="ingredientSelect">
+        <option value="">Select ingredient</option>
+      </select>
+      <input type="number" class="ingredientGrams" placeholder="Grams" value="100">
+      <span class="small">Portion</span>
+      <button class="removeIngredient danger">×</button>
+    </div>
+  `;
+  document.getElementById('dishResults').classList.add('hidden');
+  updateFoodLists();
+};
+
+function addDishToLog(index) {
+  const dish = state.dishes[index];
+  const portion = prompt(`Enter portion size in grams for ${dish.name}:`, "200");
+  
+  if (!portion) return;
+  
+  const grams = +portion;
+  const factor = grams / 100;
+  
+  const item = {
+    food: dish.name,
+    portion: grams,
+    meal: 'Lunch', // Default meal
+    kcal: Math.round(dish.kcal * factor),
+    prot: Math.round(dish.prot * factor * 10) / 10,
+    fat: Math.round(dish.fat * factor * 10) / 10,
+    carb: Math.round(dish.carb * factor * 10) / 10,
+    id: Date.now()
+  };
+  
+  const today = new Date().toDateString();
+  if (!state.daysData[today]) state.daysData[today] = { foods: [] };
+  state.daysData[today].foods.push(item);
+  save();
+  
+  alert(`Added ${grams}g of ${dish.name} to today's log`);
+  refreshDashboard();
+  if (document.getElementById('log').classList.contains('hidden') === false) refreshLog();
+}
+
+function deleteDish(index) {
+  if (confirm('Delete this dish?')) {
+    state.dishes.splice(index, 1);
+    save();
+    refreshDishes();
+  }
+}
+
+// ====== Workout Database ======
+const EXERCISE_DB = {
+  // Push Exercises
+  "Bench Press": "https://youtu.be/gRVjAtPip0Y",
+  "Incline Dumbbell Press": "https://youtu.be/8iPEnn-ltC8",
+  "Dumbbell Fly": "https://youtu.be/eozdVDA78K0",
+  "Push Ups": "https://youtu.be/IODxDxX7oi4",
+  "Cable Crossover": "https://youtu.be/taI4XduLpTk",
+  "Overhead Shoulder Press": "https://youtu.be/qEwKCR5JCog",
+  "Dumbbell Lateral Raises": "https://youtu.be/3VcKaXpzqRo",
+  "Front Raises": "https://youtu.be/3YvfRx31xDE",
+  "Arnold Press": "https://youtu.be/3ml7BH7mNwQ",
+  "Upright Row": "https://youtu.be/JaAWdljhD5o",
+  "Tricep Pushdown": "https://youtu.be/2-LAMcpzODU",
+  "Overhead Tricep Extension": "https://youtu.be/YbX7Wd8jQ-Q",
+  "Close Grip Bench Press": "https://youtu.be/rT7DgCr-3pg",
+  "Dips": "https://youtu.be/2z8JmcrW-As",
+  "Cable Rope Overhead Extension": "https://youtu.be/nRiJVZDpdL0",
+  "Seated Dumbbell Press": "https://youtu.be/qEwKCR5JCog",
+  "Chest Press Machine": "https://youtu.be/OeG2V2mFtWg",
+  "Pec Deck": "https://youtu.be/f9d2HB1Fj6k",
+  "Dumbbell Shoulder Press": "https://youtu.be/B-aVuyhvLHU",
+  "Dumbbell Tricep Kickbacks": "https://youtu.be/6SS6K3lAwZ8",
+
+  // Pull Exercises
+  "Deadlift": "https://youtu.be/op9kVnSso6Q",
+  "Pull Ups": "https://youtu.be/eGo4IYlbE5g",
+  "Lat Pulldown": "https://youtu.be/CAwf7n6Luuc",
+  "Seated Cable Row": "https://youtu.be/GZbfZ033f74",
+  "Barbell Row": "https://youtu.be/vT2GjY_Umpw",
+  "T-Bar Row": "https://youtu.be/vT2GjY_Umpw",
+  "Dumbbell Row": "https://youtu.be/pYcpY20QaE8",
+  "Face Pull": "https://youtu.be/rep-qVOkqgk",
+  "Rear Delt Fly": "https://youtu.be/wZnsLxTGd2M",
+  "Inverted Row": "https://youtu.be/w0nVlfhOVSY",
+  "Barbell Bicep Curl": "https://youtu.be/kwG2ipFRgfo",
+  "Dumbbell Bicep Curl": "https://youtu.be/ykJmrZ5v0Oo",
+  "Preacher Curl": "https://youtu.be/0AUGkch3tzc",
+  "Hammer Curl": "https://youtu.be/zC3nLlEvin4",
+  "Concentration Curl": "https://youtu.be/soxrZlIl35U",
+  "Cable Curl": "https://youtu.be/av7-8igSXTs",
+  "Chin Up": "https://youtu.be/bmEfxUHXZ9M",
+  "EZ Bar Curl": "https://youtu.be/xz5QHs1CVCU",
+  "Reverse Grip Row": "https://youtu.be/9efgcAjQe7E",
+  "Shrugs": "https://youtu.be/mz6zUKjhuDs",
+
+  // Leg Exercises
+  "Squats": "https://youtu.be/aclHkVaku9U",
+  "Leg Press": "https://youtu.be/IZxyjW7MPJQ",
+  "Lunges": "https://youtu.be/QOVaHwm-Q6U",
+  "Bulgarian Split Squat": "https://youtu.be/2C-uNgKwPLE",
+  "Leg Extension": "https://youtu.be/YyvSfVjQeL0",
+  "Leg Curl": "https://youtu.be/1Tq3QdYUuHs",
+  "Romanian Deadlift": "https://youtu.be/2SHsk9AzdjA",
+  "Hip Thrust": "https://youtu.be/LM8XHLYJoYs",
+  "Glute Bridge": "https://youtu.be/wPM8icPu6H8",
+  "Calf Raise": "https://youtu.be/4zH3U9-4zvM",
+  "Barbell Front Squat": "https://youtu.be/tlfahNdNPPI",
+  "Goblet Squat": "https://youtu.be/6xwYjGg1RQM",
+  "Sumo Deadlift": "https://youtu.be/4AObAU-EcYE",
+  "Step Ups": "https://youtu.be/dQqApCGd5Ss",
+  "Box Jump": "https://youtu.be/52r_Ul5k03g",
+  "Walking Lunges": "https://youtu.be/QOVaHwm-Q6U",
+  "Cable Kickbacks": "https://youtu.be/NB4hSPd08_k",
+  "Single Leg Press": "https://youtu.be/3-7xyyE73RQ",
+  "Seated Calf Raise": "https://youtu.be/3ZBfj8Lxw3U",
+  "Hack Squat": "https://youtu.be/AoEwSPwG5YQ",
+
+  // Core/Ab Exercises
+  "Crunch": "https://youtu.be/Xyd_fa5zoEU",
+  "Plank": "https://youtu.be/pSHjTRCQxIw",
+  "Side Plank": "https://youtu.be/K2VljzCC16g",
+  "Hanging Leg Raise": "https://youtu.be/JB2oyawG9KI",
+  "Cable Crunch": "https://youtu.be/bwRPhTRwqcs",
+  "Bicycle Crunch": "https://youtu.be/9FGilxCbdz8",
+  "Mountain Climber": "https://youtu.be/nmwgirgXLYM",
+  "Flutter Kicks": "https://youtu.be/JkVHRN8_4KU",
+  "Ab Rollout": "https://youtu.be/MjPArXzYOLk",
+  "Russian Twist": "https://youtu.be/wkD8rjkodUI",
+  "Leg Raises": "https://youtu.be/JB2oyawG9KI",
+  "Sit Ups": "https://youtu.be/1fbU_MkV7NE",
+  "Toe Touches": "https://youtu.be/GS_z6FG_jqE",
+  "Reverse Crunch": "https://youtu.be/HyqC0vmjz4o",
+  "Cable Woodchopper": "https://youtu.be/E_xovGgr3N8",
+  "Stability Ball Crunch": "https://youtu.be/vkKCVCZe474",
+  "Hanging Knee Raise": "https://youtu.be/CtAAG_0LaJ0",
+  "Decline Sit Up": "https://youtu.be/6-8E7q3rA8E",
+  "Oblique Crunch": "https://youtu.be/WWtD07iyd0U",
+  "Weighted Plank": "https://youtu.be/Ep3ISAKQ3vM",
+
+  // Full Body/Extra
+  "Burpees": "https://youtu.be/dZgVxmf6jkA",
+  "Kettlebell Swing": "https://youtu.be/6uWZ0oQzKxg",
+  "Farmer's Carry": "https://youtu.be/26A3H6-gkvE",
+  "Clean and Press": "https://youtu.be/XxWcirHIwVo",
+  "Snatch": "https://youtu.be/nJKs8QJH6N0",
+  "Thrusters": "https://youtu.be/QKZFnNEDc1I",
+  "Battle Ropes": "https://youtu.be/m6X2JEx9Yxw",
+  "Jump Rope": "https://youtu.be/AWbP13YQW9g",
+  "Wall Sit": "https://youtu.be/-cdph8hv0O0",
+  "Sled Push": "https://youtu.be/KjYhxAao8rA"
+};
+
+const WORKOUT_PLANS = {
+  ppl: {
+    name: "PPL (Push/Pull/Legs)",
+    days: {
+      "Push Day": [
+        "Bench Press", "Overhead Shoulder Press", "Incline Dumbbell Press", 
+        "Lateral Raises", "Tricep Pushdown"
+      ],
+      "Pull Day": [
+        "Pull Ups", "Barbell Row", "Lat Pulldown", 
+        "Dumbbell Curl", "Face Pull"
+      ],
+      "Leg Day": [
+        "Squats", "Romanian Deadlift", "Leg Press", 
+        "Leg Curl", "Calf Raise"
+      ]
+    }
+  },
+  upperLower: {
+    name: "Upper/Lower Split",
+    days: {
+      "Upper Day": [
+        "Bench Press", "Pull Ups", "Overhead Press", 
+        "Barbell Row", "Lateral Raises"
+      ],
+      "Lower Day": [
+        "Squats", "Romanian Deadlift", "Leg Press", 
+        "Leg Curl", "Calf Raise"
+      ]
+    }
+  },
+  homePPL: {
+    name: "Home PPL with Weighted Bag",
+    days: {
+      "Push Day (Home)": [
+        "Push Ups", "Overhead Press", "Dumbbell Fly", 
+        "Lateral Raises", "Tricep Extension"
+      ],
+      "Pull Day (Home)": [
+        "Dumbbell Row", "Bicep Curl", "Reverse Fly", 
+        "Upright Row", "Face Pull"
+      ],
+      "Leg Day (Home)": [
+        "Squats", "Lunges", "Romanian Deadlift", 
+        "Calf Raise", "Glute Bridge"
+      ]
+    }
+  }
+};
+
+// ====== Workout Navigation ======
+let currentDayEditing = null;
+let selectedExercises = [];
+
+function refreshWorkoutUI() {
+  // Show main workout screen
+  showWorkoutSection('workoutMain');
+  
+  // Show current plan if exists
+  if (state.workoutPlan) {
+    document.getElementById('currentPlanDisplay').classList.remove('hidden');
+    const plan = state.workoutPlan;
+    document.getElementById('currentPlanInfo').innerHTML = `
+      <h4>${plan.name}</h4>
+      <p>${Object.keys(plan.days).length} days</p>
+    `;
+  } else {
+    document.getElementById('currentPlanDisplay').classList.add('hidden');
+  }
+}
+
+function showWorkoutSection(sectionId) {
+  // Hide all workout sections
+  const sections = ['workoutMain', 'workoutReady', 'workoutGym', 'workoutHome', 
+                   'workoutCustom', 'exerciseSelector', 'workoutPlanDisplay'];
+  sections.forEach(id => document.getElementById(id).classList.add('hidden'));
+  
+  // Show requested section
+  document.getElementById(sectionId).classList.remove('hidden');
+}
+
+function showWorkoutType(type) {
+  if (type === 'custom') {
+    showWorkoutSection('workoutCustom');
+    setupCustomPlan();
+  } else if (type === 'ready') {
+    showWorkoutSection('workoutReady');
+  }
+}
+
+function showWorkoutPlan(type) {
+  if (type === 'gym') {
+    showWorkoutSection('workoutGym');
+  } else if (type === 'home') {
+    showWorkoutSection('workoutHome');
+  }
+}
+
+function backToWorkoutMain() {
+  showWorkoutSection('workoutMain');
+}
+
+function backToReadyPlans() {
+  showWorkoutSection('workoutReady');
+}
+
+function backToCustomPlan() {
+  showWorkoutSection('workoutCustom');
+}
+
+// ====== Custom Plan Builder ======
+function setupCustomPlan() {
+  const daysContainer = document.getElementById('customDaysContainer');
+  daysContainer.innerHTML = '';
+  
+  const daysCount = parseInt(document.getElementById('customPlanDays').value);
+  
+  for (let i = 1; i <= daysCount; i++) {
+    const dayDiv = document.createElement('div');
+    dayDiv.className = 'workout-day';
+    dayDiv.innerHTML = `
+      <h4>Day ${i}</h4>
+      <div class="row">
+        <div class="col">
+          <label>Day Name</label>
+          <input type="text" class="dayName" placeholder="e.g., Chest Day" value="Day ${i}">
+        </div>
+        <div class="col">
+          <label>Exercises</label>
+          <div class="dayExercises" id="dayExercises${i}"></div>
+          <button type="button" class="ghost" onclick="openExerciseSelector(${i})">+ Add Exercises</button>
+        </div>
+      </div>
+    `;
+    daysContainer.appendChild(dayDiv);
+  }
+}
+
+function openExerciseSelector(dayNumber) {
+  currentDayEditing = dayNumber;
+  selectedExercises = [];
+  
+  // Populate exercise list
+  const exerciseList = document.getElementById('exerciseList');
+  exerciseList.innerHTML = '';
+  
+  Object.keys(EXERCISE_DB).forEach(exercise => {
+    const exerciseDiv = document.createElement('div');
+    exerciseDiv.className = 'exercise-option';
+    exerciseDiv.innerHTML = `
+      <div class="workout-exercise-name">${exercise}</div>
+      <div class="workout-exercise-meta">
+        <a href="${EXERCISE_DB[exercise]}" target="_blank" class="exercise-tutorial">Tutorial</a>
+      </div>
+    `;
+    exerciseDiv.onclick = () => {
+      exerciseDiv.classList.toggle('selected');
+      const index = selectedExercises.indexOf(exercise);
+      if (index > -1) {
+        selectedExercises.splice(index, 1);
+      } else {
+        selectedExercises.push(exercise);
+      }
+    };
+    exerciseList.appendChild(exerciseDiv);
+  });
+  
+  showWorkoutSection('exerciseSelector');
+}
+
+function addSelectedExercises() {
+  if (currentDayEditing && selectedExercises.length > 0) {
+    const dayExercisesDiv = document.getElementById(`dayExercises${currentDayEditing}`);
+    
+    selectedExercises.forEach(exercise => {
+      const exerciseDiv = document.createElement('div');
+      exerciseDiv.className = 'workout-exercise';
+      exerciseDiv.innerHTML = `
+        <div class="workout-exercise-info">
+          <div class="workout-exercise-name">${exercise}</div>
+          <div class="workout-exercise-meta">
+            <a href="${EXERCISE_DB[exercise]}" target="_blank" class="exercise-tutorial">Tutorial</a>
+          </div>
+        </div>
+        <button class="danger" onclick="this.parentElement.remove()">×</button>
+      `;
+      dayExercisesDiv.appendChild(exerciseDiv);
+    });
+  }
+  
+  backToCustomPlan();
+}
+
+function saveCustomPlan() {
+  const planName = document.getElementById('customPlanName').value.trim();
+  if (!planName) {
+    alert('Please enter a plan name');
+    return;
+  }
+  
+  const days = [];
+  const dayElements = document.querySelectorAll('.workout-day');
+  
+  dayElements.forEach(dayElement => {
+    const dayName = dayElement.querySelector('.dayName').value;
+    const exercises = [];
+    
+    dayElement.querySelectorAll('.workout-exercise .workout-exercise-name').forEach(exerciseElement => {
+      exercises.push(exerciseElement.textContent);
+    });
+    
+    if (exercises.length > 0) {
+      days.push({ name: dayName, exercises: exercises });
+    }
+  });
+  
+  if (days.length === 0) {
+    alert('Please add exercises to at least one day');
+    return;
+  }
+  
+  // Convert to plan format
+  const plan = {
+    name: planName,
+    days: {}
+  };
+  
+  days.forEach(day => {
+    plan.days[day.name] = day.exercises;
+  });
+  
+  state.workoutPlan = plan;
+  save();
+  alert('Custom plan saved!');
+  refreshWorkoutUI();
+}
+
+// ====== Ready-Made Plans ======
+function selectReadyPlan(planId) {
+  const plan = WORKOUT_PLANS[planId];
+  state.workoutPlan = {
+    name: plan.name,
+    days: plan.days
+  };
+  save();
+  alert(`${plan.name} selected!`);
+  showCurrentPlan();
+}
+
+function showCurrentPlan() {
+  if (!state.workoutPlan) return;
+  
+  const plan = state.workoutPlan;
+  document.getElementById('planDisplayTitle').textContent = plan.name;
+  
+  let content = '';
+  Object.keys(plan.days).forEach(dayName => {
+    content += `<div class="workout-day"><h4>${dayName}</h4>`;
+    plan.days[dayName].forEach(exercise => {
+      const tutorial = EXERCISE_DB[exercise] || '#';
+      content += `
+        <div class="workout-exercise">
+          <div class="workout-exercise-info">
+            <div class="workout-exercise-name">${exercise}</div>
+            <div class="workout-exercise-meta">
+              <a href="${tutorial}" target="_blank" class="exercise-tutorial">Tutorial</a>
+            </div>
+          </div>
+          <div class="workout-actions">
+            <button class="ok complete-exercise" data-exercise="${exercise}">Complete</button>
+          </div>
+        </div>
+      `;
+    });
+    content += '</div>';
+  });
+  
+  document.getElementById('planDisplayContent').innerHTML = content;
+  
+  // Add completion handlers
+  document.querySelectorAll('.complete-exercise').forEach(button => {
+    button.onclick = function() {
+      const exercise = this.dataset.exercise;
+      toggleExerciseCompletion(exercise);
+      this.textContent = this.textContent === 'Complete' ? 'Undo' : 'Complete';
+      this.parentElement.parentElement.classList.toggle('workout-completed');
+    };
+  });
+  
+  showWorkoutSection('workoutPlanDisplay');
+}
+
+function clearWorkoutPlan() {
+  if (confirm('Are you sure you want to clear your current workout plan?')) {
+    state.workoutPlan = null;
+    save();
+    refreshWorkoutUI();
+  }
+}
+
+function startWorkout() {
+  alert('Workout started! Track your progress by completing exercises.');
+}
+
+function toggleExerciseCompletion(exerciseName) {
+  const today = new Date().toDateString();
+  if (!state.workoutHistory[today]) {
+    state.workoutHistory[today] = [];
+  }
+  
+  const index = state.workoutHistory[today].indexOf(exerciseName);
+  if (index > -1) {
+    state.workoutHistory[today].splice(index, 1);
+  } else {
+    state.workoutHistory[today].push(exerciseName);
+  }
+  
+  save();
+}
+
+// ====== Water Tracker ======
+function refreshWaterUI(){
+  const today = new Date().toDateString();
+  if(!state.water) state.water = {};
+  if(!state.water[today]) state.water[today] = {current:0, target:2500, cup:250};
+  
+  const w = state.water[today];
+  document.getElementById('waterTarget').value = w.target;
+  document.getElementById('cupSize').value = w.cup;
+  
+  const progress = (w.current / w.target) * 100;
+  document.getElementById('waterProg').value = progress;
+  document.getElementById('waterProgTxt').textContent = `${w.current} / ${w.target} ml`;
+  
+  // Cups visualization
+  const cupsContainer = document.getElementById('cups');
+  cupsContainer.innerHTML = '';
+  const cupsCount = Math.ceil(w.target / w.cup);
+  
+  for(let i=0; i<cupsCount; i++){
+    const cup = document.createElement('div');
+    cup.className = 'cup' + (i < Math.floor(w.current / w.cup) ? ' fill' : '');
+    cup.onclick = ()=> drinkWater(w.cup);
+    cupsContainer.appendChild(cup);
+  }
+}
+
+document.getElementById('saveWater').onclick = ()=>{
+  const today = new Date().toDateString();
+  if(!state.water) state.water = {};
+  if(!state.water[today]) state.water[today] = {current:0, target:2500, cup:250};
+  
+  state.water[today].target = +document.getElementById('waterTarget').value;
+  state.water[today].cup = +document.getElementById('cupSize').value;
+  save();
+  refreshWaterUI();
+};
+
+document.getElementById('drink').onclick = ()=> drinkWater();
+
+function drinkWater(amount){
+  const today = new Date().toDateString();
+  if(!state.water) state.water = {};
+  if(!state.water[today]) state.water[today] = {current:0, target:2500, cup:250};
+  
+  if(!amount) amount = state.water[today].cup;
+  state.water[today].current = Math.min(state.water[today].current + amount, state.water[today].target);
+  save();
+  refreshWaterUI();
+}
+
+document.getElementById('resetWater').onclick = ()=>{
+  const today = new Date().toDateString();
+  if(state.water && state.water[today]) state.water[today].current = 0;
+  save();
+  refreshWaterUI();
+};
+
+// ====== Profile ======
+function renderProfile(){
+  const s = state;
+  const html = `
+    <div class="row">
+      <div class="col"><label>Sex</label><div>${s.sex||'Not set'}</div></div>
+      <div class="col"><label>Age</label><div>${s.age||'Not set'}</div></div>
+      <div class="col"><label>Height</label><div>${s.height||'Not set'} cm</div></div>
+      <div class="col"><label>Weight</label><div>${s.weight||'Not set'} kg</div></div>
+    </div>
+    <div class="row">
+      <div class="col"><label>Workout days</label><div>${s.days||'Not set'}/week</div></div>
+      <div class="col"><label>Goal</label><div>${s.goal||'Not set'}</div></div>
+      <div class="col"><label>TDEE</label><div>${calcTDEE()} kcal</div></div>
+    </div>
+  `;
+  document.getElementById('profSummary').innerHTML = html;
+}
+
+document.getElementById('restart').onclick = ()=>{
+  if(confirm('Reset all data and restart wizard?')){
+    localStorage.removeItem(SKEY);
+    location.reload();
+  }
+};
+
+// ====== Init ======
+function init(){
+  fillLangSelects();
+  
+  if(state.lang) setLang(state.lang);
+  else setLang('ar');
+  
+  if(state.age){ // Wizard completed
+    document.getElementById('wizard').classList.add('hidden');
+    document.getElementById('nav').classList.remove('hidden');
+    showTab('home');
+    fillGoals();
+  }
+  
+  // Load AI model in background
+  loadModel();
+  
+  // Initialize food lists
+  updateFoodLists();
+  
+  // Initialize workout UI
+  refreshWorkoutUI();
+  
+  // NEW: Initialize volume estimation
+  initVolumeEstimation();
+}
+
+// Update custom plan days when changed
+document.getElementById('customPlanDays').onchange = setupCustomPlan;
+
+init();
+</script>
+</body>
+</html>
